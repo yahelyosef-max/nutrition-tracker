@@ -5,7 +5,7 @@
 
 ## מה יש בגרסה הזו (אבן דרך 1)
 
-- כניסה עם Google; לכל משתמש נתונים נפרדים (Row Level Security).
+- כניסה עם קוד חד־פעמי במייל; לכל משתמש נתונים נפרדים (Row Level Security).
 - משתמש חדש מקבל אוטומטית יעד שמירה (2,350 קק״ל, 125 ג׳ חלבון) ו-10 הארוחות מהסיכום של ג׳מיני.
 - מסך **היום**: ציר משבצות (בוקר, ביניים, צהריים, אחה״צ, ערב, לילה) עם ניבוי לפי 28 הימים האחרונים,
   אישור בלחיצה, חצי מנה, וריאציות, החלפה, דילוג, הזנה ידנית, ותחזית לסוף היום.
@@ -18,10 +18,11 @@
 ### 1. Supabase
 1. פרויקט חדש ב-supabase.com.
 2. SQL Editor ← להדביק ולהריץ את `supabase/migrations/0001_init.sql`.
-3. Authentication ← Providers ← Google: להפעיל ולהזין Client ID ו-Secret מ-Google Cloud
-   (OAuth client מסוג Web, עם ה-Redirect URL ש-Supabase מציג).
+3. כניסה עם קוד במייל: Authentication ← Emails, ובתבניות **Magic Link** ו-**Confirm signup**
+   להוסיף שורה עם `{{ .Token }}` כדי שהמייל יכלול את הקוד.
 4. Authentication ← URL Configuration: Site URL = כתובת האפליקציה ב-Vercel,
    ולהוסיף ל-Redirect URLs את `https://<הכתובת>/auth/callback`.
+5. (בהמשך) כניסה עם Google: Authentication ← Providers ← Google, עם Client ID ו-Secret מ-Google Cloud.
 
 ### 2. Vercel
 1. Add New ← Project ← לייבא את המאגר `nutrition-tracker`.
