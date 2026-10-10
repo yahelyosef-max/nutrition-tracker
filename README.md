@@ -1,0 +1,58 @@
+# התזונה שלי
+
+מעקב קלוריות וחלבון לאייפון: היום מוכן מראש לפי מה שאוכלים בדרך כלל, ומאשרים בלחיצה.
+אפליקציית ווב (Next.js) שמוסיפים למסך הבית, עם Supabase לנתונים ולכניסה.
+
+## מה יש בגרסה הזו (אבן דרך 1)
+
+- כניסה עם Google; לכל משתמש נתונים נפרדים (Row Level Security).
+- משתמש חדש מקבל אוטומטית יעד שמירה (2,350 קק״ל, 125 ג׳ חלבון) ו-10 הארוחות מהסיכום של ג׳מיני.
+- מסך **היום**: ציר משבצות (בוקר, ביניים, צהריים, אחה״צ, ערב, לילה) עם ניבוי לפי 28 הימים האחרונים,
+  אישור בלחיצה, חצי מנה, וריאציות, החלפה, דילוג, הזנה ידנית, ותחזית לסוף היום.
+- הצעה לסגירת הפער בערב מתוך המאגר.
+- מסך **המאגר**: הוספה ועריכה של ארוחות.
+- מסך **יעדים**: שינוי שלב ויעדים (נשמר כשלב חדש, ההיסטוריה נשמרת).
+
+## הקמה
+
+### 1. Supabase
+1. פרויקט חדש ב-supabase.com.
+2. SQL Editor ← להדביק ולהריץ את `supabase/migrations/0001_init.sql`.
+3. Authentication ← Providers ← Google: להפעיל ולהזין Client ID ו-Secret מ-Google Cloud
+   (OAuth client מסוג Web, עם ה-Redirect URL ש-Supabase מציג).
+4. Authentication ← URL Configuration: Site URL = כתובת האפליקציה ב-Vercel,
+   ולהוסיף ל-Redirect URLs את `https://<הכתובת>/auth/callback`.
+
+### 2. Vercel
+1. Add New ← Project ← לייבא את המאגר `nutrition-tracker`.
+2. Environment Variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   (שניהם מ-Supabase ← Project Settings ← API)
+3. Deploy.
+
+### 3. אייפון
+לפתוח את הכתובת ב-Safari ← שיתוף ← "הוסף למסך הבית".
+
+## פיתוח
+
+```bash
+cp .env.example .env.local   # למלא את הערכים
+npm install
+npm run dev
+npm test                     # בדיקות לוגיקת הניבוי
+```
+
+## מבנה
+
+- `lib/predict.ts` — ניבוי היום והצעות לסגירת פער (עם בדיקות ב-`lib/predict.test.ts`).
+- `app/page.tsx` + `app/timeline.tsx` — מסך היום.
+- `app/actions.ts` — כל הפעולות שכותבות לנתונים.
+- `supabase/migrations/` — מבנה הנתונים, הרשאות, ומאגר ההתחלה.
+
+## הבא בתור
+
+2. תמונות: העלאה, זיהוי עם Claude, קיצור דרך "צלם ארוחה" וסנכרון אלבום.
+3. התראות (Web Push) ושאלות יזומות.
+4. משקל ואימונים מ-Apple Health, גרף מגמה וכיול יעד.
+5. פרופיל נוסף ושיתוף ארוחות משפחתיות.
