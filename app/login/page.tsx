@@ -5,51 +5,61 @@ import { useRouter } from "next/navigation";
 import { supabaseBrowser } from "@/lib/supabase/client";
 
 /**
- * Sign in with a one-time code sent by email.
- * The code is typed inside the app (not a link), so it also works from the
- * home-screen app on iPhone, which keeps its own storage separate from Safari.
+ * Email + password sign-in, done entirely inside the app so it also works from
+ * the iPhone home-screen app (whose storage is separate from Safari).
+ * The iPhone password manager fills and saves the password automatically.
  */
 export default function LoginPage() {
   const router = useRouter();
-  const [step, setStep] = useState<"email" | "code">("email");
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
-  async function sendCode(e: React.FormEvent) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    const { error } = await supabaseBrowser().auth.signInWithOtp({
-      email: email.trim(),
-      options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/auth/callback` },
-    });
-    setBusy(false);
-    if (error) {
-      setError(error.status === 429 ? "נשלחו יותר מדי קודים. נסה שוב בעוד כמה דקות." : "לא הצלחנו לשלוח קוד. בדוק את הכתובת ונסה שוב.");
-      return;
-    }
-    setStep("code");
-  }
+    setNotice(null);
+    const auth = supabaseBrowser().auth;
 
-  async function verify(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    const { error } = await supabaseBrowser().auth.verifyOtp({
-      email: email.trim(),
-      token: code.trim(),
-      type: "email",
-    });
-    if (error) {
+    if (mode === "signup") {
+      const { data, error } = await auth.signUp({ email: email.trim(), password });
       setBusy(false);
-      setError("הקוד לא נכון או שפג תוקפו.");
-      return;
+      if (error) {
+        setError(
+          error.message.toLowerCase().includes("signups not allowed")
+            ? "ההרשמה סגורה. בקש מהמנהל לפתוח אותה."
+            : error.message.toLowerCase().includes("password")
+              ? "הסיסמה חלשה מדי. נסה לפחות 8 תווים."
+              : "ההרשמה נכשלה. נסה שוב.",
+        );
+        return;
+      }
+      if (!data.session) {
+        setNotice("נשלח אליך מייל לאישור. אשר אותו, חזור לכאן והתחבר.");
+        setMode("signin");
+        return;
+      }
+    } else {
+      const { error } = await auth.signInWithPassword({ email: email.trim(), password });
+      if (error) {
+        setBusy(false);
+        setError(
+          error.message.toLowerCase().includes("not confirmed")
+            ? "צריך קודם לאשר את המייל שנשלח אליך."
+            : "המייל או הסיסמה לא נכונים.",
+        );
+        return;
+      }
     }
     router.replace("/");
     router.refresh();
   }
+
+  const signup = mode === "signup";
 
   return (
     <main className="page" style={{ justifyContent: "center", paddingBottom: 40 }}>
@@ -58,51 +68,45 @@ export default function LoginPage() {
         היום שלך מוכן מראש לפי מה שאתה אוכל בדרך כלל. מאשרים בלחיצה.
       </p>
 
-      {step === "email" ? (
-        <form className="stack" onSubmit={sendCode}>
-          <label className="field">
-            <span>כתובת מייל</span>
-            <input
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              dir="ltr"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
-          </label>
-          <button className="btn primary block" disabled={busy} style={{ minHeight: 52 }}>
-            {busy ? "שולח…" : "שלח לי קוד כניסה"}
-          </button>
-        </form>
-      ) : (
-        <form className="stack" onSubmit={verify}>
-          <p className="small muted" style={{ margin: 0 }}>
-            שלחנו קוד ל-<span dir="ltr">{email}</span>. הקלד אותו כאן.
-          </p>
-          <label className="field">
-            <span>קוד</span>
-            <input
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="[0-9]{6,10}"
-              dir="ltr"
-              required
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              style={{ fontSize: 22, letterSpacing: 4, textAlign: "center" }}
-            />
-          </label>
-          <button className="btn primary block" disabled={busy} style={{ minHeight: 52 }}>
-            {busy ? "בודק…" : "כניסה"}
-          </button>
-          <button type="button" className="btn ghost" onClick={() => { setStep("email"); setCode(""); setError(null); }}>
-            כתובת אחרת / שלח שוב
-          </button>
-        </form>
-      )}
+      <form className="stack" onSubmit={submit}>
+        <label className="field">
+          <span>מייל</span>
+          <input
+            type="email"
+            inputMode="email"
+            autoComplete="username"
+            dir="ltr"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </label>
+        <label className="field">
+          <span>סיסמה</span>
+          <input
+            type="password"
+            autoComplete={signup ? "new-password" : "current-password"}
+            dir="ltr"
+            required
+            minLength={8}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </label>
+        <button className="btn primary block" disabled={busy} style={{ minHeight: 52 }}>
+          {busy ? "רגע…" : signup ? "יצירת חשבון" : "כניסה"}
+        </button>
+      </form>
 
+      <button
+        type="button"
+        className="btn ghost"
+        onClick={() => { setMode(signup ? "signin" : "signup"); setError(null); setNotice(null); }}
+      >
+        {signup ? "יש לי חשבון — כניסה" : "פעם ראשונה? יצירת חשבון"}
+      </button>
+
+      {notice && <p role="status" className="small" style={{ margin: 0 }}>{notice}</p>}
       {error && <p role="alert" className="protein small" style={{ margin: 0 }}>{error}</p>}
     </main>
   );
