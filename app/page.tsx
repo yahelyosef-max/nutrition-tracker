@@ -5,6 +5,7 @@ import { hebrewDayName } from "@/lib/dates";
 import { redirect } from "next/navigation";
 import Timeline from "./timeline";
 import Nav from "./nav";
+import PhotoCapture from "./photo";
 
 export const dynamic = "force-dynamic";
 
@@ -35,6 +36,7 @@ export default async function Home() {
         targets={{ kcal: day.phase.kcal_target, protein: day.phase.protein_target }}
         suggestions={suggestions}
       />
+      <PhotoCapture meals={day.meals.filter((m) => !m.archived)} />
       <Nav current="/" />
     </>
   );

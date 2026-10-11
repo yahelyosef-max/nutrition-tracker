@@ -97,6 +97,51 @@ export async function logManual(input: { slot: Slot; name: string; kcal: number;
   done(res.error);
 }
 
+/** Log a meal recognized from a photo; optionally also add it to the library. */
+export async function logPhoto(input: {
+  slot: Slot;
+  name: string;
+  kcal: number;
+  protein: number;
+  mealId?: string | null;
+  saveToLibrary?: boolean;
+}) {
+  const { supabase, user } = await requireUser();
+  const slot = asSlot(input.slot);
+  const name = String(input.name ?? "").trim().slice(0, 80) || "ארוחה מצולמת";
+  const kcal = asInt(input.kcal, 0, 5000);
+  const protein = asInt(input.protein, 0, 400);
+
+  let mealId: string | null = null;
+  if (input.mealId) {
+    const { data } = await supabase.from("meals").select("id").eq("id", input.mealId).maybeSingle();
+    mealId = data?.id ?? null;
+  }
+  if (!mealId && input.saveToLibrary) {
+    const { data, error } = await supabase
+      .from("meals")
+      .insert({ user_id: user.id, name, kcal, protein, default_slot: slot })
+      .select("id")
+      .single();
+    if (error) throw new Error(error.message);
+    mealId = data.id;
+  }
+
+  const res = await supabase.from("log_entries").insert({
+    user_id: user.id,
+    eaten_on: localDate(),
+    slot,
+    meal_id: mealId,
+    name,
+    kcal,
+    protein,
+    source: "photo",
+    status: "confirmed",
+  });
+  done(res.error);
+  if (input.saveToLibrary) revalidatePath("/meals");
+}
+
 export async function skipSlot(slot: Slot) {
   const { supabase, user } = await requireUser();
   const res = await supabase.from("log_entries").insert({
