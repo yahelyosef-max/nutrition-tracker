@@ -1,12 +1,14 @@
+import { SUPABASE_KEY, SUPABASE_URL } from "@/lib/supabase/env";
+
 export const dynamic = "force-dynamic";
 
 /** Shown when the Supabase environment variables are missing on the server. */
 export default function SetupPage() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const url = SUPABASE_URL;
+  const key = SUPABASE_KEY;
   const rows = [
     { name: "NEXT_PUBLIC_SUPABASE_URL", ok: !!url && url.startsWith("https://"), hint: url ? (url.startsWith("https://") ? "" : "צריך להתחיל ב-https://") : "חסר" },
-    { name: "NEXT_PUBLIC_SUPABASE_ANON_KEY", ok: !!key, hint: key ? "" : "חסר" },
+    { name: "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", ok: !!key, hint: key ? "" : "חסר" },
   ];
   return (
     <main className="page" style={{ paddingBottom: 40 }}>

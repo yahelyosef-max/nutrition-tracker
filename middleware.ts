@@ -1,15 +1,14 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { SUPABASE_KEY, SUPABASE_URL, supabaseConfigured } from "./lib/supabase/env";
 
 const PUBLIC_PATHS = ["/login", "/auth/callback", "/manifest.webmanifest", "/icon.svg", "/setup"];
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   // Missing configuration: show a readable page instead of crashing.
-  if (!url || !key || !url.startsWith("https://")) {
+  if (!supabaseConfigured()) {
     if (path === "/setup") return NextResponse.next();
     const to = request.nextUrl.clone();
     to.pathname = "/setup";
@@ -19,7 +18,7 @@ export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
 
   try {
-    const supabase = createServerClient(url, key, {
+    const supabase = createServerClient(SUPABASE_URL, SUPABASE_KEY, {
       cookies: {
         getAll: () => request.cookies.getAll(),
         setAll: (list: { name: string; value: string; options: CookieOptions }[]) => {

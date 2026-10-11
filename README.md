@@ -28,7 +28,7 @@
 1. Add New ← Project ← לייבא את המאגר `nutrition-tracker`.
 2. Environment Variables:
    - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (או `NEXT_PUBLIC_SUPABASE_ANON_KEY`)
    (שניהם מ-Supabase ← Project Settings ← API)
 3. Deploy.
 
