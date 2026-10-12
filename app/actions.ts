@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { currentUser } from "@/lib/supabase/server";
-import { localDate } from "@/lib/dates";
+import { daysBefore, localDate } from "@/lib/dates";
 import { SLOTS, type Slot } from "@/lib/types";
 
 const SLOT_IDS = new Set(SLOTS.map((s) => s.id));
@@ -105,9 +105,16 @@ export async function logPhoto(input: {
   protein: number;
   mealId?: string | null;
   saveToLibrary?: boolean;
+  /** Day the photo was taken (YYYY-MM-DD); up to 7 days back. Defaults to today. */
+  eatenOn?: string;
 }) {
   const { supabase, user } = await requireUser();
   const slot = asSlot(input.slot);
+  const today = localDate();
+  const eatenOn =
+    input.eatenOn && /^\d{4}-\d{2}-\d{2}$/.test(input.eatenOn) && input.eatenOn <= today && input.eatenOn >= daysBefore(today, 7)
+      ? input.eatenOn
+      : today;
   const name = String(input.name ?? "").trim().slice(0, 80) || "ארוחה מצולמת";
   const kcal = asInt(input.kcal, 0, 5000);
   const protein = asInt(input.protein, 0, 400);
@@ -129,7 +136,7 @@ export async function logPhoto(input: {
 
   const res = await supabase.from("log_entries").insert({
     user_id: user.id,
-    eaten_on: localDate(),
+    eaten_on: eatenOn,
     slot,
     meal_id: mealId,
     name,
