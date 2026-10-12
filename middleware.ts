@@ -2,7 +2,16 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { SUPABASE_KEY, SUPABASE_URL, supabaseConfigured } from "./lib/supabase/env";
 
-const PUBLIC_PATHS = ["/login", "/auth/callback", "/manifest.webmanifest", "/icon.svg", "/setup"];
+const PUBLIC_PATHS = [
+  "/login",
+  "/auth/callback",
+  "/manifest.webmanifest",
+  "/icon.svg",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/apple-touch-icon.png",
+  "/setup",
+];
 
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;

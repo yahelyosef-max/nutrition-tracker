@@ -5,7 +5,7 @@ export const metadata: Metadata = {
   title: "התזונה שלי",
   description: "מעקב קלוריות וחלבון",
   appleWebApp: { capable: true, title: "תזונה", statusBarStyle: "default" },
-  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  icons: { icon: "/icon.svg", apple: "/apple-touch-icon.png" },
 };
 
 export const viewport: Viewport = {
